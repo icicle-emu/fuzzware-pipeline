@@ -598,7 +598,7 @@ def do_cov(args, leftover_args):
 
     if user_defined_basic_blocks:
         # User-provided symbols / basic blocks
-        specific_bbs = (bb & ~1 for bb in resolve_all(symbols, user_defined_basic_blocks))
+        specific_bbs = list(bb & ~1 for bb in resolve_all(symbols, user_defined_basic_blocks))
         print("Resolved basic block addresses: {}".format(",".join(map(hex, specific_bbs))))
 
         # User-provided symbols / basic blocks to skip
