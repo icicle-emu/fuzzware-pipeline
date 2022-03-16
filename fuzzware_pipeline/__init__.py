@@ -858,7 +858,7 @@ def do_genstats(args, leftover_args):
 
     if STATNAME_MMIO_OVERHEAD_ELIM in args.stats:
         logger.info("Generating full MMIO traces. This will take a while...")
-        tracegen_args = argparse.Namespace(dryrun=False, trace_types=["mmio"], fuzzers="1", main_dirs="latest", projdir=projdir, all=False, tracedir_postfix=None, verbose=False)
+        tracegen_args = argparse.Namespace(dryrun=False, trace_types=["mmio"], fuzzers="1", main_dirs="latest", projdir=projdir, all=False, tracedir_postfix=None, verbose=False, crashes=False)
         do_gentraces(tracegen_args, None)
 
         logger.info("Calculating MMIO overhead elimination. This could take a while...")
