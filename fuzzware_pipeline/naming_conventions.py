@@ -275,7 +275,7 @@ def trace_paths_for_main_dir(main_dir_path, trace_prefix, crash_paths=False):
     return sorted(Path(main_dir_path).joinpath(SESS_DIRNAME_FUZZERS).glob(SESS_DIRNAME_FUZZER_INST_PREFIX + "*/" + trace_dir_name + "/" + trace_prefix+"*"))
 
 def crash_paths_for_main_dir(main_dir_path):
-    input_paths_for_main_dir(main_dir_path, crashes=True)
+    return input_paths_for_main_dir(main_dir_path, crashes=True)
 
 def fuzzer_dirs_for_main_dir(main_dir_path):
     return sorted(Path(main_dir_path).joinpath(SESS_DIRNAME_FUZZERS).glob("*"))
