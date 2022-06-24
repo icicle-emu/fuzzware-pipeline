@@ -136,6 +136,16 @@ def do_genconfig(args, leftover_args):
 
     check_leftover_args(leftover_args)
 
+    base_input_dir = args.dyn_base_inputs
+
+    if not os.path.isdir(base_input_dir):
+        logger.warning("Base inputs do not exist")
+        exit(1)
+
+    if args.fuzz_for != "00:00:00:00":
+        logger.warning("Fuzzing not yet implemented for dynamic reconfiguration")
+        exit(1)
+
     binary_path = args.binary
     if not os.path.isfile(binary_path):
         logger.error(f"Binary '{binary_path}' does not exist or is not a regular file")
@@ -194,16 +204,6 @@ def do_genconfig(args, leftover_args):
     gen_configs(target_dir, config_map, binary_path, elf_path)
 
     save_config(config_map, outpath)
-
-    base_input_dir = args.dyn_base_inputs
-
-    if not os.path.isdir(base_input_dir):
-        logger.warning("Base inputs do not exist")
-        exit(1)
-
-    if args.fuzz_for != "00:00:00:00":
-        logger.warning("Fuzzing not yet implemented for dynamic reconfiguration")
-        exit(1)
 
     logger.info("Running inputs to detect early crashes...")
     keep_going = True
@@ -1032,7 +1032,7 @@ def main():
     parser_genconfig.add_argument('--dump-syms', default=False, action="store_true", help=f"(Optional) Instead of generating a full configuration, just dump symbols to 'outpath' instead. Defaults to false, with symbol output path of '{nc.DEFAULT_FILENAME_SYMS_YML}'.")
     parser_genconfig.add_argument('--dyn-base-inputs', default=default_base_input_dir(), help="(Optional) Base inputs to use for initial memory region re-configuration.")
     parser_genconfig.add_argument('--max-dyn-regions', default=3, action='store_true', help="(Optional) The maximum number of memory regions do dynamically add based on crashes.")
-    parser_genconfig.add_argument('--fuzz-for', default="00:00:00:00", help="(Optional) In addition to running some base inputs, also use fuzzing to discover missing mapped memory regions from crashes which occur early during fuzzing. Specify the time to run the fuzzer in DD:HH:MM:SS format.")
+    parser_genconfig.add_argument('--fuzz-for', default="00:00:00:00", help="(Optional) Not yet implemented. In addition to running some base inputs, also use fuzzing to discover missing mapped memory regions from crashes which occur early during fuzzing. Specify the time to run the fuzzer in DD:HH:MM:SS format.")
     parser_genconfig.add_argument('--ti', default="./launchpad", help="(Optional) When creating configs for Texas Instruments (TI) binaries, it may be necessary to add a certain ROM binary, which can be parsed via this command line argument. Another effect is that the ram size will be upped, as this is often an issue with TI samples")
 
     # Extract command-line argumetns
