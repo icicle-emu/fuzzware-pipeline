@@ -287,7 +287,7 @@ class Session:
                 logger.warning("[TRIAGING STEP 1] ... Output end")
 
                 logger.warning("\n\n[TRIAGING STEP 2] Re-running single emulation run, showing its output...")
-                run_target(self.config_path, first_file(self.base_input_dir), self.extra_runtime_args)
+                run_target(self.config_path, first_file(self.base_input_dir), self.extra_runtime_args + [ "-v" ])
                 logger.warning("[TRIAGING STEP 2] ... Output end\n")
 
                 return False
