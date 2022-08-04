@@ -21,7 +21,8 @@ from .naming_conventions import (SESS_DIRNAME_BASE_INPUTS,
                                  SESS_FILENAME_PREFIX_INPUT_ORIG,
                                  SESS_FILENAME_TEMP_BBL_SET,
                                  SESS_FILENAME_TEMP_MMIO_TRACE,
-                                 SESS_FILENAME_TEMP_PREFIX_INPUT)
+                                 SESS_FILENAME_TEMP_PREFIX_INPUT,
+                                 SESS_FILENAME_CUR_INPUT)
 from .observers.new_fuzz_input_handler import NewFuzzInputHandler
 from .observers.new_trace_file_handler import NewTraceFileHandler
 from .run_fuzzer import run_corpus_minimizer
@@ -290,6 +291,10 @@ class Session:
                 run_target(self.config_path, first_file(self.base_input_dir), self.extra_runtime_args + [ "-v" ])
                 logger.warning("[TRIAGING STEP 2] ... Output end\n")
 
+                logger.warning("\n\n[TRIAGING STEP 3] Re-running single emulation run with .cur_input file, showing its output...")
+                run_target(self.config_path, self.fuzzer_cur_input_path(instance.inst_num), self.extra_runtime_args + [ "-v" ])
+                logger.warning("[TRIAGING STEP 3] ... Output end\n")
+
                 return False
 
         logger.info("Fuzzers started up, setting up listeners for input generation")
@@ -396,6 +401,9 @@ class Session:
 
     def fuzzer_queue_dir(self, fuzzer_no: int) -> str:
         return join(self.fuzzer_instance_dir(fuzzer_no), 'queue')
+
+    def fuzzer_cur_input_path(self, fuzzer_no: int) -> str:
+        return join(self.fuzzer_instance_dir(fuzzer_no), SESS_FILENAME_CUR_INPUT)
 
     def fuzzer_input_paths(self, fuzzer_no: int):
         """
