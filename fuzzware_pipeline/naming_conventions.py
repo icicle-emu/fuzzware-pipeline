@@ -38,6 +38,7 @@ PIPELINE_FILENAME_EXIT_AT_CFG = "exit_at_config.yml"
 PIPELINE_FILENAME_MAIN_CFG_SNIPPETS = "main_config_snippets.yml"
 PIPELINE_FILENAME_JOB_TIMINGS = "job_timings.txt"
 PIPELINE_FILENAME_INPUT_CREATION_TIMINGS = "input_creation_timings.txt"
+PIPELINE_FILENAME_CRASH_CREATION_TIMINGS = "crash_creation_timings.txt"
 PIPELINE_FILENAME_WARNINGS = "WARNINGS.txt"
 PIPELINE_FILENAME_EMPTY_INPUT = ".empty_input"
 PIPELINE_FILENAME_VALID_BB_LIST = "valid_basic_blocks.txt"
@@ -205,6 +206,9 @@ def job_timings_file_path(project_path):
 
 def input_creation_timings_path(project_path):
     return os.path.join(project_path, PIPELINE_DIRNAME_STATS, PIPELINE_FILENAME_INPUT_CREATION_TIMINGS)
+
+def crash_creation_timings_path(project_path):
+    return os.path.join(project_path, PIPELINE_DIRNAME_STATS, PIPELINE_FILENAME_CRASH_CREATION_TIMINGS)
 
 # parent/<pipeline_name>/<session_name>/fuzzers/<fuzzerX>/{queue,crashes,hangs}/<input_filename>
 input_path_regex = re.compile(".*/([^/]+)/([^/]+)/{fuzzer_dir}/({fuzzername_prefix}\\d+)/(queue|crashes|hangs)/(id:[^/]+)".format(fuzzer_dir=SESS_DIRNAME_FUZZERS, fuzzername_prefix=SESS_DIRNAME_FUZZER_INST_PREFIX))

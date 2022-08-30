@@ -729,9 +729,10 @@ def do_gentraces(args, leftover_args):
 
 MODE_GENSTATS = 'genstats'
 STATNAME_COV, STATNAME_MMIO_COSTS, STATNAME_MMIO_OVERHEAD_ELIM = 'coverage', 'modeling-costs', 'mmio-overhead-elim'
-STATNAME_CRASH_CONTEXTS = 'crashcontexts'
+STATNAME_CRASH_CONTEXTS, STATNAME_CRASH_TIMINGS = 'crashcontexts', 'crashtimings'
 KNOWN_STATNAMES = [
-    STATNAME_COV, STATNAME_MMIO_COSTS, STATNAME_MMIO_OVERHEAD_ELIM, STATNAME_CRASH_CONTEXTS
+    STATNAME_COV, STATNAME_MMIO_COSTS, STATNAME_MMIO_OVERHEAD_ELIM,
+    STATNAME_CRASH_CONTEXTS, STATNAME_CRASH_TIMINGS
 ]
 def do_genstats(args, leftover_args):
     from .util.config import load_config_deep
@@ -840,6 +841,19 @@ def do_genstats(args, leftover_args):
             discovery_timings_path = os.path.join(stats_dir, nc.STATS_FILENAME_MILESTONE_DISCOVERY_TIMINGS)
             logger.info(f"Writing milestone discovery info to {discovery_timings_path}")
             dump_milestone_discovery_timings(discovery_timings_path, milestone_discovery_timings, milestone_bbs)
+
+    if STATNAME_CRASH_TIMINGS in args.stats:
+        from .util.eval_utils import (
+            add_input_file_time_entries,
+            derive_input_file_times_from_afl_plot_data
+        )
+
+        crash_file_timings_path = nc.crash_creation_timings_path(projdir)
+        crash_file_time_entries = sorted(derive_input_file_times_from_afl_plot_data(projdir, crashes=True), key=lambda e: e[0])
+
+        logger.info(f"Writing crash timings to {crash_file_timings_path}")
+        with open(crash_file_timings_path, "w") as f:
+            add_input_file_time_entries(f, crash_file_time_entries)
 
     if STATNAME_MMIO_COSTS in args.stats:
         job_timings_path = job_timings_file_path(projdir)
@@ -999,7 +1013,7 @@ def main():
     parser_gentraces.add_argument('-v', '--verbose', action="store_true", default=False, help="Display stdout output of trace generation.")
 
     # Genstats command-line arguments
-    parser_genstats.add_argument('stats', nargs="*", default=(STATNAME_COV,STATNAME_MMIO_COSTS), help=f"The stats to generate. Options: {','.join(KNOWN_STATNAMES)}. Defaults to '{STATNAME_COV} {STATNAME_MMIO_COSTS}'.")
+    parser_genstats.add_argument('stats', nargs="*", default=(STATNAME_COV, STATNAME_CRASH_TIMINGS,STATNAME_MMIO_COSTS), help=f"The stats to generate. Options: {','.join(KNOWN_STATNAMES)}. Defaults to '{STATNAME_COV} {STATNAME_CRASH_TIMINGS} {STATNAME_MMIO_COSTS}'.")
     parser_genstats.add_argument('-p', '--projdir', help="Fuzzware project directory to generate stats for. Defaults to searching the current working directory for a fuzzware project root.", default=None)
     parser_genstats.add_argument('--all', action="store_true", default=False, help=f"Generate all statistics types ({STATNAME_COV},{STATNAME_MMIO_COSTS},{STATNAME_MMIO_OVERHEAD_ELIM})")
     parser_genstats.add_argument('--valid-bb-file', default=None, help=f"A list of valid basic block addresses to filter coverage against. If not specified, will look for a file '{nc.PIPELINE_FILENAME_VALID_BB_LIST}'")

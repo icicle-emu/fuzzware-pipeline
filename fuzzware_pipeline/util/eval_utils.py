@@ -186,7 +186,9 @@ def parse_crash_contexts(crash_context_path):
 
     return crash_input_paths_per_pc_lr
 
-def parse_afl_fuzzer_stats(stats_file_path):
+AFL_FUZZER_STATS_FIELD_IND_paths_total    = 3
+AFL_FUZZER_STATS_FIELD_IND_unique_crashes = 7
+def parse_afl_fuzzer_stats(stats_file_path, crashes=False):
     res = []
     with open(stats_file_path, "r") as f:
         lines = f.readlines()
@@ -196,13 +198,13 @@ def parse_afl_fuzzer_stats(stats_file_path):
             if not line.strip():
                 continue
             entries = line.split(",")
-            # Extract paths_total
+            # Extract unix_time, paths_total | unique_crashes
             # # unix_time, cycles_done, cur_path, paths_total, pending_total, pending_favs, map_size, unique_crashes, unique_hangs, max_depth, execs_per_sec
-            res.append((int(entries[0]), int(entries[3])))
+            res.append((int(entries[0]), int(entries[AFL_FUZZER_STATS_FIELD_IND_unique_crashes if crashes else AFL_FUZZER_STATS_FIELD_IND_paths_total])))
 
     return res
 
-def derive_input_file_times_from_afl_plot_data(project_base_dir):
+def derive_input_file_times_from_afl_plot_data(project_base_dir, crashes=False):
     """
     Derives input file creation timings from afl plot_data entries
 
@@ -210,7 +212,7 @@ def derive_input_file_times_from_afl_plot_data(project_base_dir):
     itself written these timings for (all) input files (and for file systems/OSes where
     the creation timings are not accessible).
 
-    We base the timings based on the plot_data's "paths_total" field. As an approximation,
+    We base the timings based on the plot_data's "paths_total" / "unique_crashes" fields. As an approximation,
     we assume that input queue entries have been generated evenly between the previous and
     the next plot_data entries.
 
@@ -221,8 +223,8 @@ def derive_input_file_times_from_afl_plot_data(project_base_dir):
     for main_dir in main_dirs_for_proj(project_base_dir):
         for fuzzer_dir in fuzzer_dirs_for_main_dir(main_dir):
             prev_stat_seconds, prev_num_input_files = None, 0
-            seconds_and_file_path_counts = parse_afl_fuzzer_stats(fuzzer_dir.joinpath("plot_data"))
-            input_paths = input_paths_for_fuzzer_dir(fuzzer_dir)
+            seconds_and_file_path_counts = parse_afl_fuzzer_stats(fuzzer_dir.joinpath("plot_data"), crashes=crashes)
+            input_paths = input_paths_for_fuzzer_dir(fuzzer_dir, crashes=crashes)
             for stat_seconds, stat_num_input_files in seconds_and_file_path_counts:
                 if prev_stat_seconds is None:
                     prev_stat_seconds = stat_seconds
