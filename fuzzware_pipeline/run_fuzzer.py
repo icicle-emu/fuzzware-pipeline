@@ -8,9 +8,8 @@ from .logging_handler import logging_handler
 logger = logging_handler().get_logger("pipeline")
 
 DIR = os.path.dirname(os.path.realpath(__file__))
-AFL_DIR = os.path.join(DIR, "../../emulator/afl")
-AFL_FUZZ = os.path.join(AFL_DIR, "afl-fuzz")
-AFL_CMIN = os.path.join(AFL_DIR, "afl-cmin")
+AFL_FUZZ = "afl-fuzz"
+AFL_CMIN = "afl-cmin"
 
 def afl_base_dir(use_aflpp=False):
     afl_dirname = "AFLplusplus" if use_aflpp else "afl"
@@ -44,13 +43,18 @@ def run_fuzzer(target_args, input_dir, output_dir, fuzzer_no=1, fuzzers_total=1,
     # Set unlimited memory, Unicorn mode, timeout
     fuzzer_args = [os.path.join(afl_base_dir(use_aflpp), AFL_FUZZ), "-m", "none", "-U", "-t", "{:d}".format(timeout)]
     fuzzer_args += ["-i", input_dir]
+
+    # For AFLPlusPlus with a single fuzzer, pass the parent dir as output
+    if use_aflpp and fuzzers_total == 1:
+        output_dir = os.path.split(output_dir)[0]
+
     fuzzer_args += ["-o", output_dir]
 
     if dict_path is not None:
         fuzzer_args += ["-x", dict_path]
 
-    if fuzzers_total != 1:
-        is_master = fuzzer_no <= masters_total
+    if fuzzers_total != 1 or use_aflpp:
+        is_master = (fuzzers_total != 1 or not skip_deterministic) and fuzzer_no <= masters_total
         # More than one instance
         if is_master:
             fuzzer_args += ["-M"]

@@ -188,9 +188,9 @@ def parse_crash_contexts(crash_context_path):
 
 AFL_FUZZER_STATS_FIELD_IND_paths_total    = 3
 AFL_FUZZER_STATS_FIELD_IND_unique_crashes = 7
-def parse_afl_fuzzer_stats(stats_file_path, crashes=False):
+def parse_afl_plot_data(plotdata_file_path, crashes=False):
     res = []
-    with open(stats_file_path, "r") as f:
+    with open(plotdata_file_path, "r") as f:
         lines = f.readlines()
         # skip first line
         for i in range(1, len(lines)):
@@ -202,6 +202,20 @@ def parse_afl_fuzzer_stats(stats_file_path, crashes=False):
             # # unix_time, cycles_done, cur_path, paths_total, pending_total, pending_favs, map_size, unique_crashes, unique_hangs, max_depth, execs_per_sec
             res.append((int(entries[0]), int(entries[AFL_FUZZER_STATS_FIELD_IND_unique_crashes if crashes else AFL_FUZZER_STATS_FIELD_IND_paths_total])))
 
+    return res
+
+def parse_afl_fuzzer_stats(fuzzer_stats_file_path):
+    """
+    Parse a fuzzer_stats afl/afl++ file into a dict mapping
+    names to values.
+    """
+    res = {}
+    with open(fuzzer_stats_file_path, "r") as f:
+        for l in f.readlines():
+            if not l:
+                continue
+            name, value = l.split(":")
+            res[name.rstrip()] = value.rstrip()
     return res
 
 def derive_input_file_times_from_afl_plot_data(project_base_dir, crashes=False):
@@ -223,7 +237,7 @@ def derive_input_file_times_from_afl_plot_data(project_base_dir, crashes=False):
     for main_dir in main_dirs_for_proj(project_base_dir):
         for fuzzer_dir in fuzzer_dirs_for_main_dir(main_dir):
             prev_stat_seconds, prev_num_input_files = None, 0
-            seconds_and_file_path_counts = parse_afl_fuzzer_stats(fuzzer_dir.joinpath("plot_data"), crashes=crashes)
+            seconds_and_file_path_counts = parse_afl_plot_data(fuzzer_dir.joinpath("plot_data"), crashes=crashes)
             input_paths = input_paths_for_fuzzer_dir(fuzzer_dir, crashes=crashes)
             for stat_seconds, stat_num_input_files in seconds_and_file_path_counts:
                 if prev_stat_seconds is None:

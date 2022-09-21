@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 import time
-from os.path import isfile, join
+from os.path import isfile, join, exists
 
 from fuzzware_harness.tracing.serialization import (parse_bbl_set,
                                                     parse_mmio_trace)
@@ -29,6 +29,7 @@ from .run_fuzzer import run_corpus_minimizer
 from .run_target import gen_run_arglist, run_target
 from .util.config import save_config, save_extra_args
 from .util.files import copy_prefix_to, first_file, prepend_to_all
+from .util.eval_utils import parse_afl_fuzzer_stats
 from .workers.tracegen import gen_traces
 
 logger = logging_handler().get_logger("pipeline")
@@ -417,18 +418,18 @@ class Session:
 
     def get_execs_per_sec(self, fuzzer_no: int):
         fuzzer_stats_file = self.get_fuzzer_stats_file(fuzzer_no)
-        try:
-            with open(fuzzer_stats_file, "r") as f:
-                stats = f.readlines()
-                try:
-                    curr_execs_per_sec = float(stats[5].strip("\n").split(":")[1][1:])
-                    start_time = float(stats[0].strip("\n").split(":")[1][1:])
-                    last_update_time = float(stats[1].strip("\n").split(":")[1][1:])
-                    total_execs = float(stats[4].strip("\n").split(":")[1][1:])
-
-                    overall_execs_per_sec = total_execs / (last_update_time - start_time)
-                except (ValueError, Exception):
-                    curr_execs_per_sec, overall_execs_per_sec = 0, 0
-        except FileNotFoundError:
+        if not exists(fuzzer_stats_file):
             curr_execs_per_sec, overall_execs_per_sec = 0, 0
+        else:
+            fuzzer_stats = parse_afl_fuzzer_stats(fuzzer_stats_file)
+            try:
+                curr_execs_per_sec = float(fuzzer_stats["execs_per_sec"])
+                start_time = float(fuzzer_stats["start_time"])
+                last_update_time = float(fuzzer_stats["last_update"])
+                total_execs = float(fuzzer_stats["execs_done"])
+
+                overall_execs_per_sec = total_execs / (last_update_time - start_time)
+            except (ValueError, Exception):
+                curr_execs_per_sec, overall_execs_per_sec = 0, 0
+
         return curr_execs_per_sec, overall_execs_per_sec
