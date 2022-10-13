@@ -1,11 +1,13 @@
 import subprocess
+import sys
+assert sys.executable
 
 from .logging_handler import logging_handler
 
 logger = logging_handler().get_logger("pipeline")
 
 def gen_run_arglist(config_path, extra_args):
-    res = ["python3", "-m", "fuzzware_harness.harness", "-c", config_path] + extra_args
+    res = [sys.executable, "-m", "fuzzware_harness.harness", "-c", config_path] + extra_args
 
     return res
 
