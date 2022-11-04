@@ -754,7 +754,7 @@ class Pipeline:
         trace_gen_job_count = len(self.worker_pool.job_queue_trace_gen)
         model_gen_job_count = len(self.worker_pool.job_queue_modeling)
         state_gen_job_count = len(self.worker_pool.job_queue_state_gen)
-        log_string = "Current Pipeline Status\n"
+        log_string = f"Current Pipeline Status (main{self.curr_main_sess_index:03d})\n"
         if self.groundtruth_valid_basic_blocks:
             num_covered_bbs, num_valid_bbs = len(self.visited_valid_basic_blocks), len(self.groundtruth_valid_basic_blocks)
             log_string += f"Basic block coverage: {num_covered_bbs} / {num_valid_bbs} ({round(num_covered_bbs/num_valid_bbs * 100, 2) }%)."
@@ -769,11 +769,14 @@ class Pipeline:
 
         if len(self.curr_main_session.fuzzers) == 1:
             curr_execs_per_second, overall_execs_per_second = self.curr_main_session.get_execs_per_sec(1)
+            curr_num_crashes = self.curr_main_session.get_num_crashes(1)
+            log_string += f"Current number of crashes: {curr_num_crashes:d}\n"
             log_string += f"Current executions per second: {curr_execs_per_second:.2f} (overall: {overall_execs_per_second:.2f})\n"
         else:
-            log_string += "Current executions per second:\n"
+            log_string += "Current fuzzer stats:\n"
             for fuzzer in self.curr_main_session.fuzzers:
                 curr_execs_per_second, overall_execs_per_second = self.curr_main_session.get_execs_per_sec(fuzzer.inst_num)
-                log_string += f"fuzzer{fuzzer.inst_num}: {curr_execs_per_second:.2f} (overall: {overall_execs_per_second:.2f})\n"
+                curr_num_crashes = self.curr_main_session.get_num_crashes(fuzzer.inst_num)
+                log_string += f"[{fuzzer.inst_num}] crashes: {curr_num_crashes:d}. execs/second: {curr_execs_per_second:.2f} (overall: {overall_execs_per_second:.2f})\n"
 
         logger.info(log_string)

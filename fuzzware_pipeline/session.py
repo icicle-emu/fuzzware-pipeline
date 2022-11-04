@@ -418,9 +418,9 @@ class Session:
 
     def get_execs_per_sec(self, fuzzer_no: int):
         fuzzer_stats_file = self.get_fuzzer_stats_file(fuzzer_no)
-        if not exists(fuzzer_stats_file):
-            curr_execs_per_sec, overall_execs_per_sec = 0, 0
-        else:
+
+        curr_execs_per_sec, overall_execs_per_sec = 0, 0
+        if exists(fuzzer_stats_file):
             fuzzer_stats = parse_afl_fuzzer_stats(fuzzer_stats_file)
             try:
                 curr_execs_per_sec = float(fuzzer_stats["execs_per_sec"])
@@ -430,6 +430,19 @@ class Session:
 
                 overall_execs_per_sec = total_execs / (last_update_time - start_time)
             except (ValueError, Exception):
-                curr_execs_per_sec, overall_execs_per_sec = 0, 0
+                pass
 
         return curr_execs_per_sec, overall_execs_per_sec
+
+    def get_num_crashes(self, fuzzer_no):
+        fuzzer_stats_file = self.get_fuzzer_stats_file(fuzzer_no)
+
+        num_crashes = 0
+        if exists(fuzzer_stats_file):
+            fuzzer_stats = parse_afl_fuzzer_stats(fuzzer_stats_file)
+            try:
+                num_crashes = int(fuzzer_stats["unique_crashes"])
+            except (ValueError, Exception):
+                pass
+
+        return num_crashes
