@@ -239,7 +239,11 @@ def derive_input_file_times_from_afl_plot_data(project_base_dir, crashes=False):
             prev_stat_seconds, prev_num_input_files = None, 0
             seconds_and_file_path_counts = parse_afl_plot_data(fuzzer_dir.joinpath("plot_data"), crashes=crashes)
             input_paths = input_paths_for_fuzzer_dir(fuzzer_dir, crashes=crashes)
+            fuzzer_start_time = int(parse_afl_fuzzer_stats(fuzzer_dir.joinpath("fuzzer_stats"))["start_time"])
             for stat_seconds, stat_num_input_files in seconds_and_file_path_counts:
+                if stat_seconds < project_start_seconds:
+                    # Assume if we've gone back in time that we're using relative time logs (Like AFL++)
+                    stat_seconds = stat_seconds + fuzzer_start_time
                 if prev_stat_seconds is None:
                     prev_stat_seconds = stat_seconds
                 # Distribute the timings of input paths across the interval since the last entry
