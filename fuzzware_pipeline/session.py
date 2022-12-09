@@ -246,6 +246,7 @@ class Session:
         """
 
         queue_paths = []
+        stats_paths = []
         for i in range(1, self.num_fuzzer_procs + 1):
             logger.info("Starting fuzzer number {}".format(i))
             fuzzer_dir = self.fuzzer_instance_dir(i)
@@ -255,13 +256,14 @@ class Session:
             if not self.start_fuzzer(i):
                 logger.error("Error while starting fuzzer numer: {:d}".format(i))
             queue_paths.append(join(fuzzer_dir, "queue"))
+            stats_paths.append(join(fuzzer_dir, "fuzzer_stats"))
 
             # Wait a bit for fuzzer to choose its CPU affinity to avoid races
             time.sleep(0.05)
 
         # Now wait for all the fuzzer instances to have come up
         num_tries = 0
-        while any([not os.path.exists(path) for path in queue_paths]):
+        while any([not os.path.exists(path) for path in stats_paths]):
             num_tries += 1
             if num_tries >= 10:
                 break
