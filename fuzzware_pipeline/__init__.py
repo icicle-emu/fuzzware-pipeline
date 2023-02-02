@@ -802,7 +802,7 @@ def do_genstats(args, leftover_args):
             not_yet_found_milestone_bbs = set(milestone_bbs)
 
         logger.info("Generating missing basic block set traces, if any")
-        gen_all_missing_traces(projdir, trace_name_prefixes=(nc.PREFIX_BASIC_BLOCK_SET, ), log_progress=True, verbose=args.verbose)
+        gen_all_missing_traces(projdir, trace_name_prefixes=(nc.PREFIX_BASIC_BLOCK_SET, ), log_progress=True, verbose=args.verbose, force_overwrite=args.force_overwrite)
 
         milestone_discovery_timings = {}
         seen_bbs = set()
@@ -1020,6 +1020,7 @@ def main():
     parser_genstats.add_argument('--i-am-aware-i-am-overcounting-translation-blocks-so-force-skip-valid-bb-file', action="store_true", default=False, help="Force coverage collection to skip valid-listing basic blocks (NOTE: this will overcount coverage to translation blocks instead of basic blocks and is bad practice when comparing results with other fuzzers).")
     parser_genstats.add_argument('--milestone-bb-file', default=None, help=f"A list of basic block addresses which represent some type of milestone for which we are interested in discovery timings. If not specified, will look for a file '{nc.PIPELINE_FILENAME_CHECKPOINT_BBS}'")
     parser_genstats.add_argument('-v', '--verbose', default=False, action="store_true", help="Prints output of emulator child if set.")
+    parser_genstats.add_argument('-f', '--force-overwrite', default=False, action="store_true", help="Force re-generation of traces, deleting existing ones.")
 
     # Replaytest command-line arguments
     parser_replaytest.add_argument('project_dir', type=os.path.abspath, help="Directory containing the main config")

@@ -67,7 +67,7 @@ def batch_gen_native_traces(config_path, input_paths, extra_args=None, bbl_set_p
 
     gentrace_proc.destroy()
 
-def gen_missing_maindir_traces(maindir, required_trace_prefixes, fuzzer_nums=None, tracedir_postfix="", log_progress=False, verbose=False, crashing_inputs=False):
+def gen_missing_maindir_traces(maindir, required_trace_prefixes, fuzzer_nums=None, tracedir_postfix="", log_progress=False, verbose=False, crashing_inputs=False, force_overwrite=False):
     projdir = nc.project_base(maindir)
     config_path = nc.config_file_for_main_path(maindir)
     extra_args = parse_extra_args(load_extra_args(nc.extra_args_for_config_path(config_path)), projdir)
@@ -87,6 +87,10 @@ def gen_missing_maindir_traces(maindir, required_trace_prefixes, fuzzer_nums=Non
         # In case we have a custom tracedir postfix, we need to create directories on demand
         if not tracedir.exists():
             tracedir.mkdir()
+        elif force_overwrite == True:
+            # Assumption: Only files, no directories, in tracedir
+            for trace in tracedir.iterdir():
+                trace.unlink()
 
         for input_path in nc.input_paths_for_fuzzer_dir(fuzzer_dir, crashes=crashing_inputs):
             bbl_trace_path, ram_trace_path, mmio_trace_path = None, None, None
@@ -159,12 +163,12 @@ def gen_missing_maindir_traces(maindir, required_trace_prefixes, fuzzer_nums=Non
                     time_estimated = round((relative_done ** (-1)) * time_passed)
                     logger.info(f"[*] Processed {num_processed}/{num_gentrace_jobs} in {time_passed} seconds. Estimated seconds remaining: {time_estimated-time_passed}")
 
-def gen_all_missing_traces(projdir, trace_name_prefixes=None, log_progress=False, verbose=False, crashing_inputs=False):
+def gen_all_missing_traces(projdir, trace_name_prefixes=None, log_progress=False, verbose=False, crashing_inputs=False, force_overwrite=False):
     if trace_name_prefixes is None:
         trace_name_prefixes = nc.TRACE_FILENAME_PREFIXES
 
     for maindir in nc.main_dirs_for_proj(projdir):
-        gen_missing_maindir_traces(maindir, trace_name_prefixes, log_progress=log_progress, verbose=verbose, crashing_inputs=crashing_inputs)
+        gen_missing_maindir_traces(maindir, trace_name_prefixes, log_progress=log_progress, verbose=verbose, crashing_inputs=crashing_inputs, force_overwrite=force_overwrite)
 
 def spawn_forkserver_emu_child(config_path, input_path, extra_args, silent=False):
     arg_list = gen_run_arglist(config_path, extra_args) + [input_path]
