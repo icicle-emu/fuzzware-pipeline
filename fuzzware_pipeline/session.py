@@ -270,9 +270,14 @@ class Session:
             logger.info("Waiting for fuzzers to have started up")
             time.sleep(1)
 
-        time.sleep(1)
         for instance in self.fuzzers:
-            fuzzer_proc_exit_status = instance.proc.poll()
+            (timeout, fuzzer_proc_exit_status) = wait_for_fuzzer_init(instance)
+
+            if timeout:
+                logger.error(f"Fuzzing instance: {instance} exited right after start, exiting")
+                self.kill_fuzzers()
+                return False
+
             if fuzzer_proc_exit_status is not None:
                 logger.error(f"Fuzzing instance: {instance} exited right after start, exiting")
 
@@ -448,3 +453,18 @@ class Session:
                 pass
 
         return num_crashes
+
+def wait_for_fuzzer_init(instance):
+    """
+    Waits for either the `fuzzer_stats` file for `instance` to be created or for the `instance`
+    process to exit.
+    """
+
+    fuzzer_stats = os.path.join(instance.fuzzer_output_dir, 'fuzzer_stats')
+    for _ in range(0, 10):
+        fuzzer_proc_exit_status = instance.proc.poll()
+        if fuzzer_proc_exit_status is not None or os.path.exists(fuzzer_stats):
+            return (False, fuzzer_proc_exit_status)
+        time.sleep(2)
+
+    return (True, None)
